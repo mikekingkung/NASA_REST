@@ -10,11 +10,12 @@ import java.util.Iterator;
 
 
 public class Converter {
-    int LINK_PROCESSING_LIMIT = 2;
+    int LINK_PROCESSING_LIMIT = 300;
+    int linkProcessedCount = 0;
 
     public ArrayList<String> convertData(File jsonInputFile) {
         ArrayList<String> mediaCollection = new ArrayList<String>();
-        ArrayList<String> collections = new ArrayList<String>();
+        String collection = null;
         ArrayList<String> mediaList = new ArrayList<String>();
 
         try {
@@ -27,16 +28,15 @@ public class Converter {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode rootNode = mapper.readTree(jsonInputFile);
             // read collection
-            System.out.println("\nProcessing collection Node:");
+            //System.out.println("\nProcessing collection Node:");
             JsonNode collectionNode = rootNode.path("collection");
             // read links collectionNode.items
-            System.out.println("\nProcessing items Node:");
+            //System.out.println("\nProcessing items Node:");
             JsonNode itemsNodeArray = collectionNode.path("items");
 
             Iterator<JsonNode> itemsIterator = itemsNodeArray.elements();
 
-            System.out.println("\nProcessing items node array:");
-            int linkProcessedCount = 0;
+            //System.out.println("\nProcessing items node array:");
             while (itemsIterator.hasNext()) {
                 String title = "";
                 String description = "";
@@ -62,22 +62,17 @@ public class Converter {
 
                 //get the collection url for the item href
                 if (itemNodeLink.textValue().contains("collection")) {
-                    System.out.println("Adding a collection");
-                    System.out.println("collection: " + itemNodeLink.textValue());
-                    collections.add(itemNodeLink.textValue());
+                    collection = itemNodeLink.textValue();
                 }
 
-                System.out.println("Collections" + collections);
-                mediaCollection =  getCollection(collections, linkProcessedCount, title, description);
+                //System.out.println("Collections" + collections);
+                mediaCollection =  getCollection(collection, title, description);
                 mediaList.addAll(mediaCollection);
                 if (linkProcessedCount > LINK_PROCESSING_LIMIT){
                     System.out.println("Reached processing limit");
                     break;
                 }
-                linkProcessedCount++;
             }
-
-            System.out.println("media list" + mediaList);
 
         } catch (Exception e) {
             // TODO Auto-generated catch block
@@ -86,45 +81,48 @@ public class Converter {
         return mediaList;
     }
 
-    private ArrayList<String> getCollection(ArrayList<String> urlList, int linkProcessedCount, String title, String description) {
+    private ArrayList<String> getCollection(String collectionUrl, String title, String description) {
         // Get the collection data for the item and extract mp4 and image urls
         ArrayList<String> linkList = new ArrayList<String>();
         RestTemplate restTemplate = new RestTemplate();
 
         boolean found = false;
-        System.out.println("urlList" + urlList);
+        System.out.println("getting data for collection:" + collectionUrl);
         // go through each collection.json and get the urls contained
         ArrayList<String> data = new ArrayList<String>();
+        title = title.replace("\"", "\\\"");
+        description = description.replace("\"", "\\\"");
 
-        for (String url : urlList) {
-            System.out.println("url: " + url);
-            try {
-                data = restTemplate.getForObject(
-                        url, ArrayList.class);
-            }
-            catch(Exception ex){
-                System.out.println("Exception on collection url" + url);
-            }
-            for (String linkUrl: data){
-                if (((!linkList.contains(data))) && (linkUrl.contains(".mp4") && (linkUrl.contains("large")))) {
-                    System.out.println("mp4 added:" + data);
-                    linkList.add("{\"video\"" + ": {\"id\":" + "\"" + linkProcessedCount + "\"," + "\"url\": " + "\"" + linkUrl  + "\"," + "\"title\": " + "\"" + title + "\"," + "\"description\": " + "\"" + description  + "\"}}");
-                    // As soon as we find a large mp4 then exit processing
-                    found = true;
-                }
-                else if (((!linkList.contains(data))) && (linkUrl.contains(".jpg") && (linkUrl.contains("large")))) {
-                    System.out.println("jpg added:" + data);
-                    linkList.add("{\"image\"" + ": {\"id\":" + "\"" + linkProcessedCount  + "\"," + "\"url\": " + "\"" + linkUrl + "\"," + "\"title\": " + "\"" + title + "\"," + "\"description\": " + "\"" + description  + "\"}}");
-                    // As soon as we find a large mp4 then exit processing
-                    found = true;
-                }
+        System.out.println("collectionUrl: " + collectionUrl);
+        try {
+            data = restTemplate.getForObject(
+                    collectionUrl, ArrayList.class);
+        }
+        catch(Exception ex){
+            System.out.println("Exception on collection url" + collectionUrl);
+        }
+
+
+
+        for (String linkUrl: data){
+            if (((!linkList.contains(data))) && (linkUrl.contains(".mp4"))) {
+                System.out.println("mp4 added:" + linkUrl);
+                linkList.add("{\"video\"" + ": {\"id\":" + "\"" + linkProcessedCount + "\"," + "\"url\": " + "\"" + linkUrl  + "\"," + "\"title\": " + "\"" + title + "\"," + "\"description\": " + "\"" + description  + "\"}}");
+                // As soon as we find a large mp4 then exit processing
+                found = true;
                 System.out.println("linkProcessedCount" + linkProcessedCount);
                 linkProcessedCount++;
-                if (linkProcessedCount > LINK_PROCESSING_LIMIT){
-                    System.out.println("Reached processing limit");
-                    break;
-                }
+                break;
             }
+            else if (((!linkList.contains(data))) && (linkUrl.contains(".jpg") && (linkUrl.contains("large")))) {
+                System.out.println("jpg added:" + linkUrl);
+                linkList.add("{\"image\"" + ": {\"id\":" + "\"" + linkProcessedCount  + "\"," + "\"url\": " + "\"" + linkUrl + "\"," + "\"title\": " + "\"" + title + "\"," + "\"description\": " + "\"" + description  + "\"}}");
+                // As soon as we find a large mp4 then exit processing
+                System.out.println("linkProcessedCount" + linkProcessedCount);
+                linkProcessedCount++;
+                break;
+            }
+
         }
         return linkList;
     }

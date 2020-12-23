@@ -12,7 +12,7 @@ import java.io.IOException;
 public class FileMaker {
 
     public FileMaker(String data){
-        File file = new File("D:/Documents/Java/Consumer/src/main/resources/nasafile.json");
+        File file = new File("C:/Users/michael king/IdeaProjects/NASA_REST/src/main/resources/nasafile.json");
 
         try(FileOutputStream fos = new FileOutputStream(file);
             BufferedOutputStream bos = new BufferedOutputStream(fos)) {
