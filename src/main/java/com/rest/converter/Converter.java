@@ -10,7 +10,7 @@ import java.util.Iterator;
 
 
 public class Converter {
-    int LINK_PROCESSING_LIMIT = 300;
+    int LINK_PROCESSING_LIMIT = 10;
     int linkProcessedCount = 0;
 
     public ArrayList<String> convertData(File jsonInputFile) {
