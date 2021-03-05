@@ -23,6 +23,8 @@ public class User {
 
     public User(){};
 
+
+
     public User(String userName, String password, String title, String firstName,
                 String lastName, String emailAddress, String phoneNumber, String dob, String gender) {
         this.userName = userName;
