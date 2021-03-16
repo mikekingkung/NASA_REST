@@ -6,6 +6,7 @@ import com.rest.controller.model.UserLinks;
 import com.rest.controller.model.UserRepository;
 import com.rest.controller.model.UserLinksRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -51,17 +52,17 @@ public class RegistrationController {
             throws ResourceNotFoundException {
         System.out.println("Attempting get for UserName" + userName);
         try {
-            Optional<User> user = userRepository.findUserByUserName(userName);
-            if (user.isPresent()) {
-                System.out.print("user is "+ user.get().getId());
-                return user.get();
+            List<User> userDetails = userRepository.findByUserName(userName);
+            if (userDetails.size() == 1) {
+                System.out.print("user is "+ userDetails.get(0).getUserName());
+                return userDetails.get(0);
             } else {
                 System.out.print("user is not found");
                 return null;
             }
         }
         catch(Exception ex) {
-            throw new ResourceNotFoundException("User not found for this userName :: " + userName);
+            throw new ResourceNotFoundException("User not found for this userName : " + userName);
         }
     }
 
@@ -89,12 +90,31 @@ public class RegistrationController {
     public User createUser(@Valid @RequestBody User user) {
         System.out.println("saving user details");
         System.out.println("The user is:" + user);
-        User userSave = userRepository.save(user);
-        Optional<User> savedUser = userRepository.findById(userSave.getId());
-        System.out.println("saved user" + savedUser);
+        List<User> userDetails = userRepository.findByUserName(user.getUserName());
+        //restrict to 1 'guest' user for now
+        User userSave =  null;
+        // if user is already present then update details
+        if (userDetails.size() == 1) {
+            userRepository.updateUserDetails(
+                    user.getPassword(),
+                    user.getTitle(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getEmailAddress(),
+                    user.getPhoneNumber(),
+                    user.getDob(),
+                    user.getGender(),
+                    userDetails.get(0).getId());
+        }
+        else {
+            if (userDetails.size() == 0) {
+                userSave = userRepository.save(user);
+                Optional<User> savedUser = userRepository.findById(userSave.getId());
+                System.out.println("saved user" + savedUser);
+            }
+        }
         return userSave;
     }
-
 
     @PostMapping("/saveuserlinks")
     public UserLinks getUserLinkByName(@Valid @RequestBody UserLinks userLinks) {
