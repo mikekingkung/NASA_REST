@@ -21,9 +21,10 @@ public class NasaAPIController {
         return builder.build();
     }
 
-    @RequestMapping(path = "/getimages/{searchterm}", method = RequestMethod.GET)
-            public String hello(@PathVariable String searchterm) {
+    @RequestMapping(path = "/getimages/{searchterm}/{processinglimit}", method = RequestMethod.GET)
+            public String hello(@PathVariable String searchterm, @PathVariable int processinglimit) {
             System.out.println("searchTerm" + searchterm);
+            System.out.println("processinglimit" + processinglimit);
             RestTemplate restTemplate= new RestTemplate();
             String data = restTemplate.getForObject(
                 "https://images-api.nasa.gov/search?q="+searchterm, String.class);
@@ -32,7 +33,7 @@ public class NasaAPIController {
         FileMaker fileMaker = new FileMaker(data);
         File jsonInputFile = new File("D:/Documents/Java/NASA_REST/src/main/resources/nasafile.json");
         Converter converter = new Converter();
-        ArrayList<String> images = converter.convertData(jsonInputFile);
+        ArrayList<String> images = converter.convertData(jsonInputFile, processinglimit);
         //log.info(data.toString());
         //Convert convert = new Convert();
         //convert.convertData(quote.toString());

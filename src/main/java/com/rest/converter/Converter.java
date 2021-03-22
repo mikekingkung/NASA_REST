@@ -10,10 +10,11 @@ import java.util.Iterator;
 
 
 public class Converter {
-    int LINK_PROCESSING_LIMIT = 10;
+    int MIN_PROCESSING_LIMIT = 10;
     int linkProcessedCount = 0;
 
-    public ArrayList<String> convertData(File jsonInputFile) {
+    public ArrayList<String> convertData(File jsonInputFile, int link_processing_limit) {
+        if (link_processing_limit < 10) link_processing_limit = MIN_PROCESSING_LIMIT;
         ArrayList<String> mediaCollection = new ArrayList<String>();
         String collection = null;
         ArrayList<String> mediaList = new ArrayList<String>();
@@ -68,7 +69,7 @@ public class Converter {
                 //System.out.println("Collections" + collections);
                 mediaCollection =  getCollection(collection, title, description);
                 mediaList.addAll(mediaCollection);
-                if (linkProcessedCount > LINK_PROCESSING_LIMIT){
+                if (linkProcessedCount > link_processing_limit){
                     System.out.println("Reached processing limit");
                     break;
                 }
