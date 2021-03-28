@@ -31,7 +31,7 @@ public class NasaAPIController {
 //			String quote = restTemplate.getForObject(
 //				"https://api.nasa.gov/neo/rest/v1/neo/3542519?api_key=DEMO_KEY", String.class);
         FileMaker fileMaker = new FileMaker(data);
-        File jsonInputFile = new File("D:/Documents/Java/NASA_REST/src/main/resources/nasafile.json");
+        File jsonInputFile = new File("src/main/resources/nasafile.json");
         Converter converter = new Converter();
         ArrayList<String> images = converter.convertData(jsonInputFile, processinglimit);
         //log.info(data.toString());
